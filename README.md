@@ -92,3 +92,5 @@ Current status
 💻 SLAY: not booting yet
 💅 PinkShell: currently just a dream
 🧠 Me: figuring it out 🤷‍♀️
+
+Day 3: We booted her successfully🩷
