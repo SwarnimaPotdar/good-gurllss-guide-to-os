@@ -22,14 +22,21 @@ __attribute__((used, section(".limine_requests_end")))
 static volatile uint64_t limine_requests_end_marker[] =
     LIMINE_REQUESTS_END_MARKER;
 
+
+static void halt(void)
+{
+    for (;;)
+    {
+        __asm__ volatile ("hlt");
+    }
+}
+
+
 void kernel_main(void)
 {
     if (!LIMINE_BASE_REVISION_SUPPORTED(limine_base_revision))
     {
-        for (;;)
-        {
-            __asm__ volatile ("hlt");
-        }
+        halt();
     }
 
     struct limine_framebuffer_response *framebuffer_response =
@@ -38,22 +45,38 @@ void kernel_main(void)
     if (framebuffer_response == NULL ||
         framebuffer_response->framebuffer_count == 0)
     {
-        for (;;)
-        {
-            __asm__ volatile ("hlt");
-        }
+        halt();
     }
 
     struct limine_framebuffer *framebuffer =
         framebuffer_response->framebuffers[0];
 
+    if (framebuffer->bpp != 32)
+    {
+        halt();
+    }
+
     volatile uint32_t *pixels =
         (volatile uint32_t *)framebuffer->address;
 
-    pixels[0] = 0x00FF69B4;
+    uint64_t width = framebuffer->width;
+    uint64_t height = framebuffer->height;
+    uint64_t pitch = framebuffer->pitch / sizeof(uint32_t);
 
-    for (;;)
+    /*
+     * Barbie pink 🎀
+     *
+     * RGB: #FF69B4
+     */
+    uint32_t pink = 0x00FF69B4;
+
+    for (uint64_t y = 0; y < height; y++)
     {
-        __asm__ volatile ("hlt");
+        for (uint64_t x = 0; x < width; x++)
+        {
+            pixels[y * pitch + x] = pink;
+        }
     }
+
+    halt();
 }
